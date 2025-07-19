@@ -1,0 +1,539 @@
+/* Paleta de cores base */
+:root {
+  --azul-escuro: #1E3A8A;
+  --azul-claro: #D2EDFF;
+  --azul-intermedio: #B2E2FF;
+  --verde: #11827e;
+  --cinza-claro: #F9FAFB;
+  --fundo-dark: #0f172a;
+  --texto-dark: #f1f5f9;
+  --cartao-dark: #1e293b;
+}
+
+/* Estilos gerais */
+body, html {
+  height: 100%;
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: transparent;
+  overflow-x: hidden; /* impede rolagem horizontal indesejada */
+  overflow-y: auto;   /* permite rolagem vertical */
+  transition: background 0.3s, color 0.3s;
+}
+
+
+/* Vídeo de fundo */
+#bg-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+}
+
+.login-body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(30, 58, 138, 0.3);
+  z-index: -1;
+}
+
+.login-body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(7, 44, 255, 0.2);
+  z-index: -1;
+}
+
+.login-wrapper {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-box {
+  background-color: var(--azul-claro);
+  padding: 32px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  text-align: center;
+  max-width: 380px;
+  width: 100%;
+  position: relative;
+}
+
+.logo {
+  width: 50px;
+  margin-bottom: 20px;
+}
+
+h2 {
+  color: var(--azul-escuro);
+  margin-bottom: 30px;
+  font-weight: 600;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+label {
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #011827;
+}
+
+input {
+  padding: 12px;
+  border: 1px solid var(--azul-intermedio);
+  background-color: white;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  transition: border 0.3s, box-shadow 0.3s;
+}
+
+input:focus {
+  border-color: var(--azul-intermedio);
+  outline: none;
+}
+
+button {
+  background-color: var(--azul-escuro);
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #011827;
+}
+
+.footer-text {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #011827;
+  opacity: 0.7;
+}
+
+/* Cabeçalho e navegação */
+.main-header {
+  background-color: var(--azul-escuro);
+  color: white;
+  padding: 20px;
+  text-align: center;
+  position: relative;
+}
+
+.logout-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: var(--verde);
+  color: white;
+  padding: 8px 14px;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.toggle-theme {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--verde);
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.main-nav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  background-color: var(--azul-claro);
+  padding: 10px;
+}
+
+.main-nav a {
+  color: var(--azul-escuro);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.main-nav a:hover {
+  text-decoration: underline;
+}
+
+/* Tabela de disciplinas */
+.discipline-table {
+  width: 90%;
+  margin: 20px auto;
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.discipline-table th,
+.discipline-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.discipline-table th {
+  background-color: var(--azul-intermedio);
+  color: #011827;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.status.ativo {
+  background-color: var(--verde);
+  color: white;
+}
+
+.status.inativo {
+  background-color: #ccc;
+  color: #333;
+}
+
+.discipline-table a {
+  color: var(--azul-escuro);
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.discipline-table a:hover {
+  text-decoration: underline;
+}
+
+/* Lista de eventos */
+.event-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px auto;
+  width: 90%;
+}
+
+.event-list li {
+  background: white;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+/* Botão adicionar */
+.add-button {
+  display: block;
+  margin: 20px auto;
+  background-color: var(--verde);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.add-button:hover {
+  background-color: #0e6c61;
+}
+
+/* Containers principais */
+#progresso,
+#disciplinas,
+#eventos {
+  margin: 40px auto;
+  width: 90%;
+}
+
+#progresso h2,
+#progresso h3,
+#disciplinas h2,
+#eventos h2 {
+  color: var(--azul-escuro);
+  margin-left: 40px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.progress-container p {
+  margin: 10px 0 5px;
+  font-weight: 500;
+  color: var(--azul-escuro);
+}
+
+.progress-bar {
+  width: 100%;
+  background-color: #f1f1f1;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 20px;
+  margin-bottom: 20px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--azul-escuro);
+  transition: width 0.5s ease;
+}
+
+/* Lista de pendências */
+.pending-list {
+  list-style: disc inside;
+  padding: 0 20px;
+  margin: 15px 0;
+}
+
+.pending-list li {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  transition: background 0.3s;
+}
+
+.pending-list li:hover {
+  background: var(--azul-claro);
+}
+
+/* Cartões de resumo e área */
+.summary-cards {
+  display: flex;
+  justify-content: space-around;
+  margin: 30px 0;
+  gap: 20px;
+}
+
+.summary-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  flex: 1;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.summary-card h3 {
+  margin-top: 0;
+  color: var(--azul-escuro);
+}
+
+.summary-card p {
+  font-size: 24px;
+  margin: 10px 0 0;
+  font-weight: bold;
+}
+
+.area-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  margin: 30px 0;
+}
+
+.area-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.area-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.area-card strong {
+  color: var(--azul-escuro);
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* Box motivacional */
+.motivation-box {
+  background: var(--verde);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  margin-top: 30px;
+  font-size: 18px;
+}
+
+/* Modo escuro */
+.dashboard.dark {
+  background-color: var(--fundo-dark);
+  color: var(--texto-dark);
+}
+
+.dashboard.dark .main-header,
+.dashboard.dark .main-nav,
+.dashboard.dark .discipline-table th,
+.dashboard.dark .event-list li {
+  background-color: var(--cartao-dark);
+  color: var(--texto-dark);
+}
+
+.dashboard.dark .discipline-table td,
+.dashboard.dark .event-list li {
+  background-color: var(--cartao-dark);
+  color: var(--texto-dark);
+}
+
+.dashboard.dark #progresso h2,
+.dashboard.dark #disciplinas h2,
+.dashboard.dark #eventos h2 {
+  color: var(--azul-claro);
+}
+
+.dashboard.dark .progress-container p {
+  color: var(--azul-claro);
+}
+
+.dashboard.dark .main-nav a {
+  color: var(--azul-claro) !important;
+}
+
+.dashboard.dark .discipline-table a {
+  color: white;
+}
+
+/* Estilos escuros para progresso */
+.dashboard.dark .summary-card,
+.dashboard.dark .area-card {
+  background-color: var(--cartao-dark);
+  color: var(--texto-dark);
+  border-color: #334155;
+}
+
+.dashboard.dark .summary-card h3,
+.dashboard.dark .area-card strong {
+  color: var(--azul-claro);
+}
+
+.dashboard.dark .pending-list li {
+  background-color: var(--cartao-dark);
+  color: var(--texto-dark);
+  border-color: #334155;
+}
+
+.dashboard.dark .pending-list li:hover {
+  background-color: #1e293b;
+}
+
+.dashboard.dark .progress-bar {
+  background-color: #1e293b;
+}
+
+.dashboard.dark .progress-fill {
+  background-color: var(--azul-claro);
+}
+
+.dashboard.dark .motivation-box {
+  background-color: var(--azul-escuro);
+  color: white;
+}
+
+/* Novos estilos para box de detalhes */
+#detalhes-disciplina {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#detalhes-disciplina .box {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+#detalhes-disciplina .box h3 {
+  margin-top: 0;
+  color: var(--azul-escuro);
+}
+
+#detalhes-disciplina .box p {
+  margin: 10px 0;
+  color: #333;
+}
+
+#detalhes-disciplina .box button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--verde);
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.dashboard.dark #detalhes-disciplina .box {
+  background: var(--cartao-dark);
+  color: var(--texto-dark);
+}
+
+.dashboard.dark #detalhes-disciplina .box h3 {
+  color: var(--azul-claro);
+}
+
+.dashboard.dark #detalhes-disciplina .box p {
+  color: var(--texto-dark);
+}
+
+.dashboard.dark #detalhes-disciplina .box button {
+  background-color: var(--azul-claro);
+  color: #011827;
+}

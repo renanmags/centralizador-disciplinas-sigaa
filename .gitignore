@@ -1,0 +1,8 @@
+# Ambiente Virtual
+venv/
+
+# Ficheiros de cache do Python
+__pycache__/
+
+# Ficheiros de screenshot de erros
+screenshot_erro.png

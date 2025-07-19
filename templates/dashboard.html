@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Painel Acadêmico - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body class="dashboard">
+
+    <header class="main-header">
+        <!-- Título agora é dinâmico com o nome do curso -->
+        <h1>Portal Acadêmico - {{ session.nome_curso }}</h1>
+        <!-- Mensagem de boas-vindas simplificada -->
+        <p>Bem-vindo, {{ session.nome_aluno }}</p>
+        <!-- O botão do tema foi removido daqui -->
+    </header>
+
+    <nav class="main-nav">
+        <a href="#" class="active">Início</a>
+        <a href="#">Disciplinas</a>
+        <a href="#">Progresso</a>
+        <a href="#">Eventos</a>
+        <!-- Link de 'Sair' aponta para a página de login -->
+        <a href="/">Sair</a>
+    </nav>
+
+    <main>
+        <!-- Seção Disciplinas Ativas -->
+        <section id="disciplinas">
+            <h2>Disciplinas Ativas do Semestre</h2>
+
+            <table class="discipline-table sigaa-style">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Disciplina</th>
+                        <th>Turma</th>
+                        <th>Horário</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Verifica se a lista de disciplinas não está vazia -->
+                    {% if session.disciplinas %}
+                        <!-- Loop para criar uma linha para cada disciplina -->
+                        {% for disciplina in session.disciplinas %}
+                        <tr>
+                            <td>{{ disciplina.codigo }}</td>
+                            <td>{{ disciplina.nome }}</td>
+                            <td>{{ disciplina.turma }}</td>
+                            <td>{{ disciplina.local_horario }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Mensagem de erro se não encontrar disciplinas -->
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 20px;">
+                                {{ session.erro or "Nenhuma disciplina encontrada para o semestre atual." }}
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ======================= SEÇÕES REINSERIDAS ======================= -->
+        <!-- As seções abaixo usam dados estáticos, como placeholders visuais. -->
+
+        <!-- Seção Eventos -->
+        <section id="eventos">
+            <h2>Próximos Eventos</h2>
+            <ul class="event-list">
+                <li><strong>Apresentação de TCC</strong> – 10/08/2025</li>
+                <li><strong>Feira de Tecnologia</strong> – 25/08/2025</li>
+                <li><strong>Semana Acadêmica</strong> – 12/09/2025</li>
+            </ul>
+            <button class="add-button">+ Adicionar Evento</button>
+        </section>
+
+        <!-- Seção Progresso -->
+        <section id="progresso">
+            <h2>Progresso no Curso</h2>
+            <div class="progress-container">
+                <p>Curso concluído: 40%</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 40%;"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+</body>
+</html>
