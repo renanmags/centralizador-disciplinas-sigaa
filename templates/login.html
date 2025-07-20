@@ -5,15 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Login - Centralizador Universitário</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-    <style>
-        .loader {
-            border-top-color: #ffffff;
-            -webkit-animation: spin 1.5s linear infinite;
-            animation: spin 1.5s linear infinite;
-        }
-        @-webkit-keyframes spin { 0% { -webkit-transform: rotate(0deg); } 100% { -webkit-transform: rotate(360deg); } }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
 </head>
 <body class="login-body">
 
@@ -23,12 +14,6 @@
         Seu navegador não suporta vídeos HTML5.
     </video>
 
-    <!-- Áudio de fundo -->
-    <audio autoplay loop>
-        <source src="{{ url_for('static', filename='media/Royalty Free Education Background Music No Copyright.mp3') }}" type="audio/mpeg">
-        Seu navegador não suporta áudio em HTML5.
-    </audio>
-
     <!-- Formulário de Login -->
     <div class="login-wrapper">
         <div class="login-box">
@@ -36,17 +21,16 @@
             <h2>Bem-vindo ao Centralizador</h2>
             
             <!-- --- CORREÇÃO APLICADA AQUI --- -->
-            <!-- O 'action' agora aponta para '/dashboard' para corresponder ao app.py -->
-            <form id="loginForm" action="/dashboard" method="POST">
+            <!-- O 'action' deve apontar para '/login' para corresponder ao app.py -->
+            <form id="loginForm" action="/login" method="POST">
                 <label for="usuario">Usuário</label>
-                <input type="text" id="usuario" name="usuario" placeholder="usuário do SIGAA" required />
+                <input type="text" id="usuario" name="usuario" placeholder="Usuário do SIGAA" required />
 
                 <label for="senha">Senha</label>
                 <input type="password" id="senha" name="senha" required />
 
                 <button type="submit" class="submit-button">
                     <span class="button-text">Acessar</span>
-                    <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-5 w-5 ml-3" style="display: none;"></div>
                 </button>
 
                 {% if session.erro %}
@@ -54,10 +38,6 @@
                     {{ session.erro }}
                 </div>
                 {% endif %}
-
-                <p style="text-align: right; margin-top: 10px; font-size: 13px;">
-                    <a href="#" style="color: #1E3A8A; text-decoration: none;">Esqueceu a senha?</a>
-                </p>
             </form>
             <p class="footer-text">© 2025 Centralizador Acadêmico</p>
         </div>

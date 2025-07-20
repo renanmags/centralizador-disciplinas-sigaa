@@ -9,11 +9,8 @@
 <body class="dashboard">
 
     <header class="main-header">
-        <!-- Título agora é dinâmico com o nome do curso -->
-        <h1>Portal Acadêmico - {{ session.nome_curso }}</h1>
-        <!-- Mensagem de boas-vindas simplificada -->
-        <p>Bem-vindo, {{ session.nome_aluno }}</p>
-        <!-- O botão do tema foi removido daqui -->
+        <h1>Portal Acadêmico - {{ session.nome_curso or 'Seu Curso' }}</h1>
+        <p>Bem-vindo, {{ session.nome_aluno or 'Aluno' }}</p>
     </header>
 
     <nav class="main-nav">
@@ -21,12 +18,10 @@
         <a href="#">Disciplinas</a>
         <a href="#">Progresso</a>
         <a href="#">Eventos</a>
-        <!-- Link de 'Sair' aponta para a página de login -->
         <a href="/">Sair</a>
     </nav>
 
     <main>
-        <!-- Seção Disciplinas Ativas -->
         <section id="disciplinas">
             <h2>Disciplinas Ativas do Semestre</h2>
 
@@ -35,7 +30,8 @@
                     <tr>
                         <th>Código</th>
                         <th>Disciplina</th>
-                        <th>Turma</th>
+                        <!-- Coluna do Professor adicionada -->
+                        <th>Professor</th>
                         <th>Horário</th>
                     </tr>
                 </thead>
@@ -47,15 +43,16 @@
                         <tr>
                             <td>{{ disciplina.codigo }}</td>
                             <td>{{ disciplina.nome }}</td>
-                            <td>{{ disciplina.turma }}</td>
-                            <td>{{ disciplina.local_horario }}</td>
+                            <!-- Exibe o nome do professor capturado -->
+                            <td>{{ disciplina.professor }}</td>
+                            <td>{{ disciplina.horario }}</td>
                         </tr>
                         {% endfor %}
                     {% else %}
                         <!-- Mensagem de erro se não encontrar disciplinas -->
                         <tr>
                             <td colspan="4" style="text-align: center; padding: 20px;">
-                                {{ session.erro or "Nenhuma disciplina encontrada para o semestre atual." }}
+                                {{ session.erro or "Nenhuma disciplina encontrada." }}
                             </td>
                         </tr>
                     {% endif %}
@@ -63,10 +60,7 @@
             </table>
         </section>
 
-        <!-- ======================= SEÇÕES REINSERIDAS ======================= -->
-        <!-- As seções abaixo usam dados estáticos, como placeholders visuais. -->
-
-        <!-- Seção Eventos -->
+        <!-- As seções de Eventos e Progresso são mantidas com dados estáticos -->
         <section id="eventos">
             <h2>Próximos Eventos</h2>
             <ul class="event-list">
@@ -77,7 +71,6 @@
             <button class="add-button">+ Adicionar Evento</button>
         </section>
 
-        <!-- Seção Progresso -->
         <section id="progresso">
             <h2>Progresso no Curso</h2>
             <div class="progress-container">

@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, session, url_for, redirect
-# Importamos a função com o nome que você pediu
 from scraper_module import get_sigaa_disciplinas
 import os
 
@@ -8,13 +7,28 @@ app.secret_key = os.urandom(24)
 
 @app.route('/')
 def index():
-    session.clear()
+    """
+    Rota principal que exibe a página de login.
+    """
     return render_template('login.html')
 
-# --- CORREÇÃO APLICADA AQUI ---
-# A rota agora é '/dashboard' para corresponder ao 'action' do formulário HTML
-@app.route('/dashboard', methods=['POST'])
-def buscar_dados():
+@app.route('/dashboard', methods=['GET'])
+def dashboard():
+    """
+    Esta rota exibe o dashboard se o utilizador já estiver logado (dados na sessão).
+    """
+    # Verifica se os dados do utilizador já existem na sessão
+    if 'nome_aluno' in session and session['nome_aluno']:
+        return render_template('dashboard.html')
+    else:
+        # Se não, manda o utilizador de volta para a página de login
+        return redirect(url_for('index'))
+
+@app.route('/login', methods=['POST'])
+def processar_login():
+    """
+    Esta rota recebe os dados do formulário, chama o scraper e redireciona para o dashboard.
+    """
     usuario = request.form.get('usuario')
     senha = request.form.get('senha')
     
@@ -24,24 +38,21 @@ def buscar_dados():
 
     print(f"Recebido pedido para o utilizador: {usuario}. A chamar o scraper...")
     
-    # Chamamos a função do scraper, que retorna um dicionário
     dados_sigaa = get_sigaa_disciplinas(usuario, senha)
     
-    # Verificamos se o scraper conseguiu extrair o nome do aluno como sinal de sucesso
+    # Verifica se o scraper conseguiu extrair o nome do aluno como sinal de sucesso
     if not dados_sigaa or not dados_sigaa.get("nome_aluno"):
-        session['erro'] = 'Login falhou ou não foi possível extrair os dados. Verifique as suas credenciais.'
-        session['nome_aluno'] = None
-        session['nome_curso'] = None
-        session['disciplinas'] = []
+        session['erro'] = 'Login falhou. Verifique as suas credenciais e tente novamente.'
+        session.clear()
+        return redirect(url_for('index'))
     else:
-        # Armazena todos os dados do dicionário na sessão, para serem usados no HTML
+        # Se o login for bem-sucedido, guarda os dados na sessão
+        session.pop('erro', None)
         session['nome_aluno'] = dados_sigaa.get('nome_aluno', 'Aluno')
         session['nome_curso'] = dados_sigaa.get('nome_curso', 'Curso Desconhecido')
         session['disciplinas'] = dados_sigaa.get('disciplinas', [])
-    
-    # --- CORREÇÃO APLICADA AQUI ---
-    # Renderiza o 'dashboard.html' como a página de resultados
-    return render_template('dashboard.html')
+        # Redireciona para a rota GET do dashboard, que irá exibir os dados
+        return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True)

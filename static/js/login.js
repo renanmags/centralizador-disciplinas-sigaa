@@ -1,3 +1,4 @@
+// Este código será executado assim que a estrutura da página estiver pronta
 document.addEventListener('DOMContentLoaded', function() {
     
     // Seleciona o formulário de login
@@ -7,18 +8,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (form) {
         form.addEventListener('submit', function(e) {
             const button = this.querySelector('.submit-button');
-            
-            // Esconde o texto e mostra o loader
-            button.querySelector('.button-text').style.display = 'none';
-            
-            const loader = button.querySelector('.loader');
-            if(loader) {
-                loader.style.display = 'block';
-            }
 
-            // Desativa o botão
+            // Desativa o botão para impedir cliques múltiplos
             button.disabled = true;
-            button.style.cursor = 'not-allowed';
+
+            // Adiciona a classe 'loading' para que o CSS possa alterar a sua aparência
+            button.classList.add('loading');
         });
     }
 });
