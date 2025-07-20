@@ -6,6 +6,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
+from pathlib import Path
+import os
 import time
 
 # Imports para extração de dados
@@ -58,6 +60,7 @@ def get_sigaa_disciplinas(username, password):
     Função que usa Selenium para fazer login no SIGAA, navegar até o Atestado de Matrícula
     e extrair os dados detalhados das disciplinas.
     """
+    start_time = time.time()
     print(f"--- Iniciando scraper para o usuário: {username} ---")
     
     options = Options()
@@ -85,7 +88,7 @@ def get_sigaa_disciplinas(username, password):
         # --- ETAPA 1: LOGIN E NAVEGAÇÃO ATÉ O PORTAL ---
         print("   -> Acessando página de login...")
         driver.get('https://si3.ufc.br/sigaa/verTelaLogin.do')
-        wait = WebDriverWait(driver, 8)
+        wait = WebDriverWait(driver, 1)
         
         campo_usuario = wait.until(EC.presence_of_element_located((By.NAME, "user.login")))
         campo_usuario.send_keys(username)
@@ -94,7 +97,7 @@ def get_sigaa_disciplinas(username, password):
         campo_senha.submit()
         
         try:
-            WebDriverWait(driver, 5).until(
+            WebDriverWait(driver, 3).until(
                 EC.any_of(
                     EC.presence_of_element_located((By.CSS_SELECTOR, "input[value='Continuar >>']")),
                     EC.presence_of_element_located((By.LINK_TEXT, "Portal do Discente"))
@@ -118,11 +121,11 @@ def get_sigaa_disciplinas(username, password):
         menu_ensino = wait.until(EC.presence_of_element_located((By.XPATH, "//td[.//span[text()='Ensino']]")))
         actions = ActionChains(driver)
         actions.move_to_element(menu_ensino).perform()
-        time.sleep(0.5) # Pausa para o submenu renderizar
+        time.sleep(0.1) # Pausa para o submenu renderizar
         
         submenu_documentos = wait.until(EC.visibility_of_element_located((By.XPATH, "//td[text()='Documentos e Declarações']")))
         actions.move_to_element(submenu_documentos).perform()
-        time.sleep(0.5) # Pausa para o submenu final renderizar
+        time.sleep(0.1) # Pausa para o submenu final renderizar
         
         submenu_atestado = wait.until(EC.visibility_of_element_located((By.XPATH, "//td[text()='Atestado de Matrícula']")))
         submenu_atestado.click()
@@ -130,9 +133,6 @@ def get_sigaa_disciplinas(username, password):
         # --- ETAPA 3: EXTRAÇÃO DOS DADOS DO ATESTADO (LÓGICA CORRIGIDA) ---
         print("   -> Aguardando o carregamento dos dados do atestado...")
         
-        # --- CORREÇÃO APLICADA AQUI ---
-        # Esperamos explicitamente que a tabela de identificação apareça na página
-        # antes de tentarmos extrair o HTML.
         wait.until(EC.presence_of_element_located((By.ID, 'identificacao')))
         print("   -> Dados do atestado carregados. Extraindo...")
         
@@ -178,19 +178,43 @@ def get_sigaa_disciplinas(username, password):
                         }
                         dados_retorno["disciplinas"].append(disciplina_info)
         
+        execution_time = time.time() - start_time
+        print(f"Scraping concluído com sucesso em {execution_time:.2f} segundos")
         return dados_retorno
 
     except Exception as e:
-        print(f"   -> ERRO no scraper: {e}")
-        driver.save_screenshot('screenshot_erro.png')
-        print("   -> Captura de ecrã do erro salva em 'screenshot_erro.png'")
-        return dados_retorno
+        execution_time = time.time() - start_time
+        print(f"Erro após {execution_time:.2f} segundos de execução: {e}")
         
-    finally:
-        print("--- Finalizando scraper ---")
-        # --- Funcionalidade de depuração ---
-        print("   -> Salvando resultado em 'resultado_scraper.json' para depuração...")
-        with open('resultado_scraper.json', 'w', encoding='utf-8') as f:
-            json.dump(dados_retorno, f, indent=4, ensure_ascii=False)
+        Path("data").mkdir(exist_ok=True)
+        screenshot_path = Path("data") / "screenshot_error.png"
+        try:
+            driver.save_screenshot(str(screenshot_path))
+            print(f"Captura de tela salva em: {screenshot_path}")
+        except Exception as screenshot_error:
+            print(f"Falha ao salvar screenshot: {screenshot_error}")
+        
+        return dados_retorno
 
-        driver.quit()
+    finally:
+        if 'start_time' in locals():
+            total_time = time.time() - start_time
+            print(f"Tempo total de execução: {total_time:.2f} segundos")
+        
+        try:
+            Path("data").mkdir(exist_ok=True)
+            output_path = Path("data") / "resultado_scraper.json"
+            
+            if 'dados_retorno' in locals():
+                print(f"Salvando em {output_path}")
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    json.dump(dados_retorno, f, indent=4, ensure_ascii=False)
+            else:
+                print("Nenhum dado para salvar")
+            
+        except Exception as e:
+            print(f"Erro ao salvar resultados: {e}")
+        
+        if 'driver' in locals() and driver is not None:
+            driver.quit()
+            print("Driver finalizado")
