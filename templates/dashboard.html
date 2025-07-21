@@ -8,69 +8,84 @@
 </head>
 <body class="dashboard">
 
+    <!-- Cabeçalho -->
     <header class="main-header">
         <h1>Portal Acadêmico - {{ session.nome_curso or 'Seu Curso' }}</h1>
-        <p>Bem-vindo, {{ session.nome_aluno or 'Aluno' }}</p>
+        <div class="header-info">
+            <p>Bem-vindo, {{ session.nome_aluno or 'Aluno' }}</p>
+            <a href="/logout" class="logout-button">Sair</a>
+        </div>
     </header>
 
+    <!-- Navegação -->
     <nav class="main-nav">
         <a href="#" class="active">Início</a>
-        <a href="#">Disciplinas</a>
-        <a href="#">Progresso</a>
-        <a href="#">Eventos</a>
-        <a href="/">Sair</a>
+        <a href="#disciplinas">Disciplinas</a>
+        <a href="#eventos">Próximos Eventos</a>
+        <a href="#progresso">Progresso</a>
     </nav>
 
+    <!-- Conteúdo Principal -->
     <main>
+        <!-- Seção de Disciplinas -->
         <section id="disciplinas">
-            <h2>Disciplinas Ativas do Semestre</h2>
-
-            <table class="discipline-table sigaa-style">
+            <h2>Disciplinas Matriculadas</h2>
+            <table class="discipline-table">
                 <thead>
                     <tr>
                         <th>Código</th>
                         <th>Disciplina</th>
-                        <!-- Coluna do Professor adicionada -->
                         <th>Professor</th>
                         <th>Horário</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Verifica se a lista de disciplinas não está vazia -->
                     {% if session.disciplinas %}
-                        <!-- Loop para criar uma linha para cada disciplina -->
                         {% for disciplina in session.disciplinas %}
                         <tr>
                             <td>{{ disciplina.codigo }}</td>
                             <td>{{ disciplina.nome }}</td>
-                            <!-- Exibe o nome do professor capturado -->
                             <td>{{ disciplina.professor }}</td>
                             <td>{{ disciplina.horario }}</td>
                         </tr>
                         {% endfor %}
                     {% else %}
-                        <!-- Mensagem de erro se não encontrar disciplinas -->
                         <tr>
-                            <td colspan="4" style="text-align: center; padding: 20px;">
-                                {{ session.erro or "Nenhuma disciplina encontrada." }}
-                            </td>
+                            <td colspan="4" class="no-data">Nenhuma disciplina encontrada.</td>
                         </tr>
                     {% endif %}
                 </tbody>
             </table>
         </section>
 
-        <!-- As seções de Eventos e Progresso são mantidas com dados estáticos -->
+        <!-- Seção de Próximos Eventos (Agora mostrando as atividades do SIGAA) -->
         <section id="eventos">
             <h2>Próximos Eventos</h2>
-            <ul class="event-list">
-                <li><strong>Apresentação de TCC</strong> – 10/08/2025</li>
-                <li><strong>Feira de Tecnologia</strong> – 25/08/2025</li>
-                <li><strong>Semana Acadêmica</strong> – 12/09/2025</li>
-            </ul>
-            <button class="add-button">+ Adicionar Evento</button>
+            
+            {% if session.atividades %}
+                <ul class="event-list">
+                    {% for atividade in session.atividades %}
+                    <li class="{% if atividade.concluida %}evento-concluido{% endif %}">
+                        <!-- --- MELHORIA APLICADA AQUI --- -->
+                        <!-- Exibe o nome da disciplina em negrito -->
+                        <strong>{{ atividade.disciplina_nome }}</strong>
+                        <!-- Adiciona uma quebra de linha -->
+                        <br>
+                        <!-- Exibe a tarefa e a data, sem negrito -->
+                        {{ atividade.tarefa_descricao }} – {{ atividade.data }}
+                        
+                        {% if atividade.prazo_dias %}
+                        <span class="evento-prazo">({{ atividade.prazo_dias }} dias restantes)</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="no-data">Nenhuma atividade/evento próximo encontrado.</p>
+            {% endif %}
         </section>
 
+        <!-- Seção de Progresso (ESTÁTICA) -->
         <section id="progresso">
             <h2>Progresso no Curso</h2>
             <div class="progress-container">
@@ -80,8 +95,6 @@
                 </div>
             </div>
         </section>
-
     </main>
-
 </body>
 </html>

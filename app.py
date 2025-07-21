@@ -7,28 +7,18 @@ app.secret_key = os.urandom(24)
 
 @app.route('/')
 def index():
-    """
-    Rota principal que exibe a página de login.
-    """
+    session.clear()
     return render_template('login.html')
 
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
-    """
-    Esta rota exibe o dashboard se o utilizador já estiver logado (dados na sessão).
-    """
-    # Verifica se os dados do utilizador já existem na sessão
     if 'nome_aluno' in session and session['nome_aluno']:
         return render_template('dashboard.html')
     else:
-        # Se não, manda o utilizador de volta para a página de login
         return redirect(url_for('index'))
 
 @app.route('/login', methods=['POST'])
 def processar_login():
-    """
-    Esta rota recebe os dados do formulário, chama o scraper e redireciona para o dashboard.
-    """
     usuario = request.form.get('usuario')
     senha = request.form.get('senha')
     
@@ -40,19 +30,27 @@ def processar_login():
     
     dados_sigaa = get_sigaa_disciplinas(usuario, senha)
     
-    # Verifica se o scraper conseguiu extrair o nome do aluno como sinal de sucesso
     if not dados_sigaa or not dados_sigaa.get("nome_aluno"):
         session['erro'] = 'Login falhou. Verifique as suas credenciais e tente novamente.'
         session.clear()
         return redirect(url_for('index'))
     else:
-        # Se o login for bem-sucedido, guarda os dados na sessão
         session.pop('erro', None)
         session['nome_aluno'] = dados_sigaa.get('nome_aluno', 'Aluno')
         session['nome_curso'] = dados_sigaa.get('nome_curso', 'Curso Desconhecido')
         session['disciplinas'] = dados_sigaa.get('disciplinas', [])
-        # Redireciona para a rota GET do dashboard, que irá exibir os dados
+        # --- CORREÇÃO APLICADA AQUI ---
+        # Agora também guardamos a lista de atividades na sessão
+        session['atividades'] = dados_sigaa.get('atividades', [])
+        
         return redirect(url_for('dashboard'))
+
+# --- NOVA ROTA ADICIONADA ---
+# Rota para fazer logout e limpar a sessão
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)

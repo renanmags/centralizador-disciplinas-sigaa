@@ -10,7 +10,7 @@ from pathlib import Path
 import os
 import time
 
-# Imports para extração de dados
+# Imports para extração de dados e salvamento
 from bs4 import BeautifulSoup
 import re
 import json
@@ -18,57 +18,95 @@ import json
 def formatar_horario(horario_str):
     """
     Função auxiliar para agrupar e formatar os horários das disciplinas.
-    Exemplo de entrada: "TER 10:00-12:00QUI 10:00-12:00"
-    Exemplo de saída: "Ter e Qui - 10:00 às 12:00"
     """
     try:
-        # Limpa o texto, removendo quebras de linha e a data no final
         horario_limpo = horario_str.split('(')[0].replace('\n', '').replace('\r', '').strip()
-        
         dias_semana = r'(SEG|TER|QUA|QUI|SEX|SAB)'
         partes = [p.strip() for p in re.split(dias_semana, horario_limpo) if p.strip()]
-        
         horarios_agrupados = {}
         for i in range(0, len(partes), 2):
-            dia = partes[i]
-            # Mantém o horário original para agrupar corretamente
-            horario = partes[i+1]
-            
+            dia, horario = partes[i], partes[i+1].replace('-', ' - ')
             if horario not in horarios_agrupados:
                 horarios_agrupados[horario] = []
             horarios_agrupados[horario].append(dia)
-            
         horarios_finais = []
         for horario, dias in horarios_agrupados.items():
-            # Capitaliza a primeira letra de cada dia (ex: TER -> Ter)
-            dias_capitalizados = [d.title() for d in dias]
-            # Junta os dias com " e "
-            dias_formatados = " e ".join(dias_capitalizados)
-            # Formata a parte do horário, substituindo o hífen
-            horario_formatado = horario.replace('-', ' às ')
-            
-            # Combina tudo no formato final desejado
-            horarios_finais.append(f"{dias_formatados} - {horario_formatado}")
-            
+            dias_formatados = " e ".join([d.title() for d in dias])
+            horarios_finais.append(f"{dias_formatados} - {horario.replace('-', ' às ')}")
         return " / ".join(horarios_finais)
     except:
-        # Se ocorrer um erro na formatação, retorna a string original
         return horario_str
+
+def formatar_professores(professores_str):
+    """
+    Função auxiliar para separar múltiplos professores com ' / '.
+    A lógica considera que o SIGAA pode usar ' e ' (minúsculo) como separador.
+    """
+    separador = " e "
+    if separador in professores_str:
+        professores_lista = professores_str.split(separador)
+        nomes_formatados = [p.strip().title() for p in professores_lista]
+        return " / ".join(nomes_formatados)
+    else:
+        return professores_str.strip().title()
+
+def extrair_atividades(driver):
+    """Extrai atividades pendentes do portal do discente com extração robusta."""
+    try:
+        print("   -> Procurando tabela de atividades...")
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        tabela_soup = soup.select_one('#avaliacao-portal table')
+        
+        if not tabela_soup: 
+            print("   -> Tabela de atividades não encontrada.")
+            return []
+
+        atividades = []
+        linhas = tabela_soup.select('tbody tr')
+        
+        for linha in linhas:
+            cols = linha.select("td")
+            if len(cols) >= 3:
+                data_texto = cols[1].text.strip()
+                data_partes = data_texto.split('(')
+                celula_descricao = cols[2]
+                
+                disciplina_nome_bruto = celula_descricao.small.contents[0]
+                disciplina_nome = disciplina_nome_bruto.strip() if disciplina_nome_bruto else ""
+                
+                tarefa_tag = celula_descricao.find('a')
+                tarefa_nome = tarefa_tag.text.strip() if tarefa_tag else ""
+                
+                tarefa_descricao = f"Tarefa: {tarefa_nome}" if tarefa_nome else ""
+
+                atividades.append({
+                    "data": data_partes[0].strip(),
+                    "prazo_dias": data_partes[1].replace('dias)', '').strip() if len(data_partes) > 1 else None,
+                    "disciplina_nome": disciplina_nome,
+                    "tarefa_descricao": tarefa_descricao,
+                    "concluida": 'check.png' in cols[0].decode_contents()
+                })
+        
+        return atividades
+    
+    except Exception as e:
+        print(f"   -> Nenhuma atividade encontrada ou erro ao extrair: {str(e)}")
+        return []
 
 def get_sigaa_disciplinas(username, password):
     """
-    Função que usa Selenium para fazer login no SIGAA, navegar até o Atestado de Matrícula
-    e extrair os dados detalhados das disciplinas.
+    Função que usa Selenium para fazer login no SIGAA e extrair os dados
+    detalhados das disciplinas e atividades.
     """
-    start_time = time.time()
+    # (NOVO) Marca o tempo de início da execução
+    start_time = time.monotonic()
+    
     print(f"--- Iniciando scraper para o usuário: {username} ---")
     
     options = Options()
+    # Lembre-se de verificar se este caminho para o executável do seu navegador está correto.
     options.binary_location = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
-    
-    # Para depurar, comente a linha abaixo. Para produção, descomente.
     options.add_argument("--headless")
-    
     options.add_argument("--blink-settings=imagesEnabled=false")
     options.add_argument("--window-size=1920,1080")
     options.add_argument("--log-level=3")
@@ -79,16 +117,18 @@ def get_sigaa_disciplinas(username, password):
     driver = webdriver.Chrome(service=service, options=options)
     
     dados_retorno = {
-        "nome_aluno": None,
-        "nome_curso": None,
-        "disciplinas": []
+        "nome_aluno": None, "nome_curso": None,
+        "disciplinas": [], "atividades": []
     }
+
+    debug_dir = "debug"
+    os.makedirs(debug_dir, exist_ok=True)
     
     try:
         # --- ETAPA 1: LOGIN E NAVEGAÇÃO ATÉ O PORTAL ---
         print("   -> Acessando página de login...")
         driver.get('https://si3.ufc.br/sigaa/verTelaLogin.do')
-        wait = WebDriverWait(driver, 1)
+        wait = WebDriverWait(driver, 8)
         
         campo_usuario = wait.until(EC.presence_of_element_located((By.NAME, "user.login")))
         campo_usuario.send_keys(username)
@@ -97,7 +137,7 @@ def get_sigaa_disciplinas(username, password):
         campo_senha.submit()
         
         try:
-            WebDriverWait(driver, 3).until(
+            WebDriverWait(driver, 2).until(
                 EC.any_of(
                     EC.presence_of_element_located((By.CSS_SELECTOR, "input[value='Continuar >>']")),
                     EC.presence_of_element_located((By.LINK_TEXT, "Portal do Discente"))
@@ -115,46 +155,43 @@ def get_sigaa_disciplinas(username, password):
         wait.until(EC.title_contains("Portal do Discente"))
         print("   -> SUCESSO! Chegamos ao Portal do Discente.")
 
-        # --- ETAPA 2: NAVEGAR PELO MENU ATÉ O ATESTADO ---
-        print("   -> Navegando pelo menu para encontrar o Atestado...")
-        
+        # --- ETAPA 2: EXTRAIR ATIVIDADES PENDENTES ---
+        print("   -> Extraindo atividades pendentes...")
+        dados_retorno["atividades"] = extrair_atividades(driver)
+        print(f"   -> Encontradas {len(dados_retorno['atividades'])} atividades")
+
+        # --- ETAPA 3: NAVEGAR PELO MENU ATÉ O ATESTADO ---
+        print("   -> Navegando para o Atestado de Matrícula...")
         menu_ensino = wait.until(EC.presence_of_element_located((By.XPATH, "//td[.//span[text()='Ensino']]")))
         actions = ActionChains(driver)
         actions.move_to_element(menu_ensino).perform()
-        time.sleep(0.1) # Pausa para o submenu renderizar
+        time.sleep(0.1)
         
         submenu_documentos = wait.until(EC.visibility_of_element_located((By.XPATH, "//td[text()='Documentos e Declarações']")))
         actions.move_to_element(submenu_documentos).perform()
-        time.sleep(0.1) # Pausa para o submenu final renderizar
+        time.sleep(0.1)
         
         submenu_atestado = wait.until(EC.visibility_of_element_located((By.XPATH, "//td[text()='Atestado de Matrícula']")))
         submenu_atestado.click()
         
-        # --- ETAPA 3: EXTRAÇÃO DOS DADOS DO ATESTADO (LÓGICA CORRIGIDA) ---
-        print("   -> Aguardando o carregamento dos dados do atestado...")
-        
+        # --- ETAPA 4: EXTRAÇÃO DOS DADOS DO ATESTADO ---
+        print("   -> Extraindo dados do atestado...")
         wait.until(EC.presence_of_element_located((By.ID, 'identificacao')))
-        print("   -> Dados do atestado carregados. Extraindo...")
         
         html_atestado = driver.page_source
         soup = BeautifulSoup(html_atestado, 'html.parser')
         
-        # Encontra a tabela de identificação pelo seu ID
         tabela_info_aluno = soup.find('table', id='identificacao')
         if tabela_info_aluno:
             for linha in tabela_info_aluno.find_all('tr'):
                 celulas = linha.find_all('td')
                 if len(celulas) >= 2:
-                    label = celulas[0].text.strip()
-                    valor = celulas[1].text.strip()
+                    label, valor = celulas[0].text.strip(), celulas[1].text.strip()
                     if "Nome:" in label:
-                        nome_completo = valor.title()
-                        dados_retorno["nome_aluno"] = " ".join(nome_completo.split()[:2])
+                        dados_retorno["nome_aluno"] = " ".join(valor.title().split()[:2])
                     elif "Curso:" in label:
-                        curso_sem_sigla = valor.split(' - ')[0].strip()
-                        dados_retorno["nome_curso"] = curso_sem_sigla.title()
+                        dados_retorno["nome_curso"] = valor.split(' - ')[0].strip().title()
 
-        # Encontra a tabela de disciplinas pelo seu ID
         tabela_disciplinas = soup.find('table', id='matriculas')
         if tabela_disciplinas:
             for linha in tabela_disciplinas.find_all('tr')[1:]:
@@ -163,58 +200,54 @@ def get_sigaa_disciplinas(username, password):
                     componente_tag = colunas[0].find('span', class_='componente')
                     docente_tag = colunas[0].find('span', class_='docente')
                     horario_tag = colunas[2]
-
                     if componente_tag and docente_tag and horario_tag:
                         codigo_nome = componente_tag.text.strip().split(' - ')
-                        codigo = codigo_nome[0].strip()
-                        nome = codigo_nome[1].strip() if len(codigo_nome) > 1 else ''
-                        
-                        professor = docente_tag.text.strip().title()
-                        horario = formatar_horario(horario_tag.text.strip())
-                        
                         disciplina_info = {
-                            'codigo': codigo, 'nome': nome,
-                            'professor': professor, 'horario': horario
+                            'codigo': codigo_nome[0].strip(),
+                            'nome': codigo_nome[1].strip() if len(codigo_nome) > 1 else '',
+                            'professor': formatar_professores(docente_tag.text),
+                            'horario': formatar_horario(horario_tag.text.strip())
                         }
                         dados_retorno["disciplinas"].append(disciplina_info)
         
-        execution_time = time.time() - start_time
-        print(f"Scraping concluído com sucesso em {execution_time:.2f} segundos")
         return dados_retorno
 
     except Exception as e:
-        execution_time = time.time() - start_time
-        print(f"Erro após {execution_time:.2f} segundos de execução: {e}")
-        
-        Path("data").mkdir(exist_ok=True)
-        screenshot_path = Path("data") / "screenshot_error.png"
-        try:
-            driver.save_screenshot(str(screenshot_path))
-            print(f"Captura de tela salva em: {screenshot_path}")
-        except Exception as screenshot_error:
-            print(f"Falha ao salvar screenshot: {screenshot_error}")
-        
+        print(f"   -> ERRO no scraper: {e}")
+        screenshot_path = os.path.join(debug_dir, 'screenshot_erro.png')
+        driver.save_screenshot(screenshot_path)
+        print(f"   -> Screenshot do erro salvo em: {screenshot_path}")
         return dados_retorno
-
+        
     finally:
-        if 'start_time' in locals():
-            total_time = time.time() - start_time
-            print(f"Tempo total de execução: {total_time:.2f} segundos")
+        # --- ETAPA 5: SALVAR DADOS E FINALIZAR ---
+        print("   -> Salvando dados capturados em arquivo JSON...")
+        filepath = os.path.join(debug_dir, "dados_capturados.json")
         
         try:
-            Path("data").mkdir(exist_ok=True)
-            output_path = Path("data") / "resultado_scraper.json"
-            
-            if 'dados_retorno' in locals():
-                print(f"Salvando em {output_path}")
-                with open(output_path, 'w', encoding='utf-8') as f:
-                    json.dump(dados_retorno, f, indent=4, ensure_ascii=False)
-            else:
-                print("Nenhum dado para salvar")
-            
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(dados_retorno, f, ensure_ascii=False, indent=4)
+            print(f"   -> SUCESSO! Dados salvos em: {filepath}")
         except Exception as e:
-            print(f"Erro ao salvar resultados: {e}")
+            print(f"   -> ERRO ao salvar o arquivo JSON: {e}")
         
-        if 'driver' in locals() and driver is not None:
-            driver.quit()
-            print("Driver finalizado")
+        driver.quit()
+
+        #Calcula e exibe o tempo total de execução
+        end_time = time.monotonic()
+        duration = end_time - start_time
+        print(f"\n--- Tempo de execução: {duration:.2f} segundos ---")
+
+
+# --- Exemplo de como chamar a função ---
+# if __name__ == '__main__':
+#     # Substitua com seu usuário e senha
+#     usuario_sigaa = "SEU_USUARIO_AQUI"
+#     senha_sigaa = "SUA_SENHA_AQUI"
+#     
+#     dados_coletados = get_sigaa_disciplinas(usuario_sigaa, senha_sigaa)
+#     
+#     if dados_coletados.get("disciplinas"):
+#         print("-> Dados das disciplinas coletadas com sucesso.")
+#     else:
+#         print("-> Não foi possível coletar os dados das disciplinas.")

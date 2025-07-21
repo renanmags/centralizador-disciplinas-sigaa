@@ -283,3 +283,109 @@ button:hover {
   background-color: var(--azul-loading); /* Usa a nova variável de cor */
   cursor: not-allowed; /* Mostra o cursor de "não permitido" */
 }
+
+/* ======================= ESTILOS PARA ATIVIDADES ======================= */
+.atividade-card {
+    border: 1px solid var(--azul-intermedio);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.atividade-card:hover {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.atividade-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.atividade-data {
+    font-weight: bold;
+    color: var(--azul-escuro);
+    font-size: 0.95rem;
+}
+
+.atividade-prazo {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-left: 8px;
+    font-weight: 500;
+}
+
+.atividade-descricao {
+    color: #2c3e50;
+    margin: 8px 0;
+    line-height: 1.4;
+}
+
+.atividade-actions {
+    margin-top: 10px;
+}
+
+.atividade-link {
+    color: var(--azul-escuro);
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.atividade-link:hover {
+    text-decoration: underline;
+}
+
+.atividade-link::before {
+    content: "🔗";
+    margin-right: 5px;
+}
+
+.atividade-concluida {
+    background-color: #e8f5e9;
+    border-color: #a5d6a7;
+}
+
+.atividade-concluida .atividade-status {
+    color: var(--verde);
+    font-size: 0.85rem;
+}
+
+/* Estilo para prazos urgentes (1 ou 2 dias) */
+[data-prazo="1"] .atividade-prazo,
+[data-prazo="2"] .atividade-prazo {
+    color: #c0392b;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+/* Seção de Atividades */
+#atividades {
+    margin: 40px auto;
+    width: 90%;
+}
+
+#atividades h2 {
+    color: var(--azul-escuro);
+    margin-left: 0;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.nenhuma-atividade {
+    color: var(--azul-escuro);
+    text-align: center;
+    padding: 20px;
+    background-color: var(--azul-claro);
+    border-radius: 8px;
+}
