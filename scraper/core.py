@@ -1,5 +1,3 @@
-# scraper/core.py
-
 # Imports de bibliotecas externas
 import os
 import time

@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <link rel="icon" href="{{ url_for('static', filename='images/brasao.ico') }}" type="image/png">
 </head>
 <body class="dashboard">
 
@@ -21,8 +23,7 @@
     <nav class="main-nav">
         <a href="#" class="active">Início</a>
         <a href="#disciplinas">Disciplinas</a>
-        <a href="#eventos">Próximos Eventos</a>
-        <a href="#progresso">Progresso</a>
+        <a href="#eventos">Eventos</a>
     </nav>
 
     <main>
@@ -57,9 +58,7 @@
         </section>
 
         <section id="eventos">
-            <h2>Próximos Eventos</h2>
-            
-            <div id="lista-eventos-container">
+            <h2>Eventos</h2> <div id="lista-eventos-container">
             </div>
             
             <div class="add-button-container">
@@ -103,16 +102,7 @@
                 </form>
             </div>
         </section>
-
-        <section id="progresso">
-            <h2>Progresso no Curso</h2>
-            <div class="progress-container">
-                <p>Curso concluído: 40%</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 40%;"></div>
-                </div>
-            </div>
-        </section>
+        
     </main>
     
     <script>

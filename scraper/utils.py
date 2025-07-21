@@ -1,4 +1,3 @@
-# scraper/utils.py
 import re
 
 def formatar_horario(horario_str):

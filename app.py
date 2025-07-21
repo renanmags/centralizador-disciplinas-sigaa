@@ -18,9 +18,6 @@ def dashboard():
     else:
         return redirect(url_for('index'))
 
-# ===============================================================
-# == ROTA DE LOGIN ATUALIZADA PARA RESPONDER COM JSON ============
-# ===============================================================
 @app.route('/login', methods=['POST'])
 def processar_login():
     usuario = request.form.get('usuario')

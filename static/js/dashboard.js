@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- PARTE 1: LÓGICA DO FORMULÁRIO ---
     const botaoMostrarForm = document.getElementById('btn-mostrar-form');
     const formContainer = document.getElementById('form-container');
-    const formNovoEvento = document.getElementById('form-novo-evento'); // Definido aqui para ser usado por ambos os listeners
+    const formNovoEvento = document.getElementById('form-novo-evento'); 
     
     if (botaoMostrarForm) {
         botaoMostrarForm.addEventListener('click', function() {
@@ -12,21 +12,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // (NOVO) Lógica para o botão de cancelar
     const botaoCancelar = document.getElementById('btn-cancelar');
     if (botaoCancelar) {
         botaoCancelar.addEventListener('click', function() {
-            // 1. Esconde o formulário
             formContainer.style.display = 'none';
-            // 2. Mostra o botão "+ Adicionar Evento" de volta
             botaoMostrarForm.style.display = 'block';
-            // 3. Limpa qualquer campo que o usuário possa ter preenchido
             if(formNovoEvento) {
                 formNovoEvento.reset();
             }
         });
     }
-
 
     // --- PARTE 2: ATIVAR O CALENDÁRIO INTELIGENTE (FLATPICKR) ---
     flatpickr("#evento-data", {
@@ -191,4 +186,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- INICIALIZAÇÃO ---
     renderizarTodosEventos();
+});
+
+const navLinks = document.querySelectorAll('.main-nav a[href^="#"]');
+
+navLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetSection = document.querySelector(targetId);
+        if (targetSection) {
+            targetSection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
 });
