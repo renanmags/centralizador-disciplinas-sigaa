@@ -1,4 +1,12 @@
-# Imports para automação do navegador
+# scraper/core.py
+
+# Imports de bibliotecas externas
+import os
+import time
+import json
+import re
+from pathlib import Path
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -6,49 +14,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
-from pathlib import Path
-import os
-import time
 
-# Imports para extração de dados e salvamento
-from bs4 import BeautifulSoup
-import re
-import json
-
-def formatar_horario(horario_str):
-    """
-    Função auxiliar para agrupar e formatar os horários das disciplinas.
-    """
-    try:
-        horario_limpo = horario_str.split('(')[0].replace('\n', '').replace('\r', '').strip()
-        dias_semana = r'(SEG|TER|QUA|QUI|SEX|SAB)'
-        partes = [p.strip() for p in re.split(dias_semana, horario_limpo) if p.strip()]
-        horarios_agrupados = {}
-        for i in range(0, len(partes), 2):
-            dia, horario = partes[i], partes[i+1].replace('-', ' - ')
-            if horario not in horarios_agrupados:
-                horarios_agrupados[horario] = []
-            horarios_agrupados[horario].append(dia)
-        horarios_finais = []
-        for horario, dias in horarios_agrupados.items():
-            dias_formatados = " e ".join([d.title() for d in dias])
-            horarios_finais.append(f"{dias_formatados} - {horario.replace('-', ' às ')}")
-        return " / ".join(horarios_finais)
-    except:
-        return horario_str
-
-def formatar_professores(professores_str):
-    """
-    Função auxiliar para separar múltiplos professores com ' / '.
-    A lógica considera que o SIGAA pode usar ' e ' (minúsculo) como separador.
-    """
-    separador = " e "
-    if separador in professores_str:
-        professores_lista = professores_str.split(separador)
-        nomes_formatados = [p.strip().title() for p in professores_lista]
-        return " / ".join(nomes_formatados)
-    else:
-        return professores_str.strip().title()
+# Importa as funções auxiliares do nosso próprio pacote
+from .utils import formatar_horario, formatar_professores
 
 def extrair_atividades(driver):
     """Extrai atividades pendentes do portal do discente com extração robusta."""
@@ -98,13 +66,11 @@ def get_sigaa_disciplinas(username, password):
     Função que usa Selenium para fazer login no SIGAA e extrair os dados
     detalhados das disciplinas e atividades.
     """
-    # (NOVO) Marca o tempo de início da execução
     start_time = time.monotonic()
     
     print(f"--- Iniciando scraper para o usuário: {username} ---")
     
     options = Options()
-    # Lembre-se de verificar se este caminho para o executável do seu navegador está correto.
     options.binary_location = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
     options.add_argument("--headless")
     options.add_argument("--blink-settings=imagesEnabled=false")
@@ -125,7 +91,6 @@ def get_sigaa_disciplinas(username, password):
     os.makedirs(debug_dir, exist_ok=True)
     
     try:
-        # --- ETAPA 1: LOGIN E NAVEGAÇÃO ATÉ O PORTAL ---
         print("   -> Acessando página de login...")
         driver.get('https://si3.ufc.br/sigaa/verTelaLogin.do')
         wait = WebDriverWait(driver, 8)
@@ -155,12 +120,10 @@ def get_sigaa_disciplinas(username, password):
         wait.until(EC.title_contains("Portal do Discente"))
         print("   -> SUCESSO! Chegamos ao Portal do Discente.")
 
-        # --- ETAPA 2: EXTRAIR ATIVIDADES PENDENTES ---
         print("   -> Extraindo atividades pendentes...")
         dados_retorno["atividades"] = extrair_atividades(driver)
         print(f"   -> Encontradas {len(dados_retorno['atividades'])} atividades")
 
-        # --- ETAPA 3: NAVEGAR PELO MENU ATÉ O ATESTADO ---
         print("   -> Navegando para o Atestado de Matrícula...")
         menu_ensino = wait.until(EC.presence_of_element_located((By.XPATH, "//td[.//span[text()='Ensino']]")))
         actions = ActionChains(driver)
@@ -174,7 +137,6 @@ def get_sigaa_disciplinas(username, password):
         submenu_atestado = wait.until(EC.visibility_of_element_located((By.XPATH, "//td[text()='Atestado de Matrícula']")))
         submenu_atestado.click()
         
-        # --- ETAPA 4: EXTRAÇÃO DOS DADOS DO ATESTADO ---
         print("   -> Extraindo dados do atestado...")
         wait.until(EC.presence_of_element_located((By.ID, 'identificacao')))
         
@@ -220,7 +182,6 @@ def get_sigaa_disciplinas(username, password):
         return dados_retorno
         
     finally:
-        # --- ETAPA 5: SALVAR DADOS E FINALIZAR ---
         print("   -> Salvando dados capturados em arquivo JSON...")
         filepath = os.path.join(debug_dir, "dados_capturados.json")
         
@@ -233,21 +194,6 @@ def get_sigaa_disciplinas(username, password):
         
         driver.quit()
 
-        #Calcula e exibe o tempo total de execução
         end_time = time.monotonic()
         duration = end_time - start_time
         print(f"\n--- Tempo de execução: {duration:.2f} segundos ---")
-
-
-# --- Exemplo de como chamar a função ---
-# if __name__ == '__main__':
-#     # Substitua com seu usuário e senha
-#     usuario_sigaa = "SEU_USUARIO_AQUI"
-#     senha_sigaa = "SUA_SENHA_AQUI"
-#     
-#     dados_coletados = get_sigaa_disciplinas(usuario_sigaa, senha_sigaa)
-#     
-#     if dados_coletados.get("disciplinas"):
-#         print("-> Dados das disciplinas coletadas com sucesso.")
-#     else:
-#         print("-> Não foi possível coletar os dados das disciplinas.")
