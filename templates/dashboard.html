@@ -4,11 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Painel Acadêmico - Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body class="dashboard">
 
-    <!-- Cabeçalho -->
     <header class="main-header">
         <h1>Portal Acadêmico - {{ session.nome_curso or 'Seu Curso' }}</h1>
         <div class="header-info">
@@ -17,7 +18,6 @@
         </div>
     </header>
 
-    <!-- Navegação -->
     <nav class="main-nav">
         <a href="#" class="active">Início</a>
         <a href="#disciplinas">Disciplinas</a>
@@ -25,9 +25,7 @@
         <a href="#progresso">Progresso</a>
     </nav>
 
-    <!-- Conteúdo Principal -->
     <main>
-        <!-- Seção de Disciplinas -->
         <section id="disciplinas">
             <h2>Disciplinas Matriculadas</h2>
             <table class="discipline-table">
@@ -58,34 +56,54 @@
             </table>
         </section>
 
-        <!-- Seção de Próximos Eventos (Agora mostrando as atividades do SIGAA) -->
         <section id="eventos">
             <h2>Próximos Eventos</h2>
             
-            {% if session.atividades %}
-                <ul class="event-list">
-                    {% for atividade in session.atividades %}
-                    <li class="{% if atividade.concluida %}evento-concluido{% endif %}">
-                        <!-- --- MELHORIA APLICADA AQUI --- -->
-                        <!-- Exibe o nome da disciplina em negrito -->
-                        <strong>{{ atividade.disciplina_nome }}</strong>
-                        <!-- Adiciona uma quebra de linha -->
-                        <br>
-                        <!-- Exibe a tarefa e a data, sem negrito -->
-                        {{ atividade.tarefa_descricao }} – {{ atividade.data }}
-                        
-                        {% if atividade.prazo_dias %}
-                        <span class="evento-prazo">({{ atividade.prazo_dias }} dias restantes)</span>
-                        {% endif %}
-                    </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p class="no-data">Nenhuma atividade/evento próximo encontrado.</p>
-            {% endif %}
+            <div id="lista-eventos-container">
+            </div>
+            
+            <div class="add-button-container">
+                <button id="btn-mostrar-form" class="add-button">+ Adicionar Evento</button>
+            </div>
+
+            <div id="form-container" class="form-card" style="display: none;">
+                <h3>Adicionar Novo Evento</h3>
+                <p>Crie seus próprios lembretes, como provas ou trabalhos.</p>
+                
+                <form id="form-novo-evento">
+                    <div class="mb-3">
+                        <label for="evento-titulo">Nome da Tarefa</label>
+                        <input type="text" class="form-control" id="evento-titulo" placeholder="Ex: AP3 de Cálculo" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="evento-disciplina">Disciplina</label>
+                        <select id="evento-disciplina" class="form-control" required>
+                            <option value="" disabled selected>Selecione uma Disciplina</option>
+                            {% for disciplina in session.disciplinas %}
+                                <option value="{{ disciplina.nome }}">{{ disciplina.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="evento-data">Data do Evento</label>
+                        <input type="text" class="form-control" id="evento-data" placeholder="dd/mm/aaaa" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="evento-descricao">Descrição Adicional (Opcional)</label>
+                        <input type="text" class="form-control" id="evento-descricao" placeholder="Ex: Estudar capítulos 1 e 2">
+                    </div>
+                    
+                    <div class="form-buttons">
+                        <button type="submit" class="btn-salvar">Salvar Evento</button>
+                        <button type="button" id="btn-cancelar" class="btn-cancelar">Cancelar</button> 
+                    </div>
+                </form>
+            </div>
         </section>
 
-        <!-- Seção de Progresso (ESTÁTICA) -->
         <section id="progresso">
             <h2>Progresso no Curso</h2>
             <div class="progress-container">
@@ -96,5 +114,13 @@
             </div>
         </section>
     </main>
+    
+    <script>
+        const atividadesSIGAA = {{ session.atividades|tojson if session.atividades else '[]'|safe }};
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script> 
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    
 </body>
 </html>

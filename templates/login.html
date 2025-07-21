@@ -4,24 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Login - Centralizador Universitário</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
 </head>
 <body class="login-body">
 
-    <!-- Vídeo de fundo -->
     <video autoplay muted loop id="bg-video">
         <source src="{{ url_for('static', filename='media/videoufc.mp4') }}" type="video/mp4" />
         Seu navegador não suporta vídeos HTML5.
     </video>
 
-    <!-- Formulário de Login -->
     <div class="login-wrapper">
         <div class="login-box">
             <img src="{{ url_for('static', filename='images/brasao4_vertical.png') }}" alt="Logo" class="logo" />
             <h2>Bem-vindo ao Centralizador</h2>
             
-            <!-- --- CORREÇÃO APLICADA AQUI --- -->
-            <!-- O 'action' deve apontar para '/login' para corresponder ao app.py -->
+            {% if session.erro %}
+                <div class="error-message" role="alert">
+                    {{ session.erro }}
+                </div>
+            {% endif %}
+
             <form id="loginForm" action="/login" method="POST">
                 <label for="usuario">Usuário</label>
                 <input type="text" id="usuario" name="usuario" placeholder="Usuário do SIGAA" required />
@@ -32,18 +35,11 @@
                 <button type="submit" class="submit-button">
                     <span class="button-text">Acessar</span>
                 </button>
-
-                {% if session.erro %}
-                <div style="padding: 1rem; margin-top: 1rem; font-size: 0.875rem; color: #721c24; background-color: #f8d7da; border-radius: 0.5rem;" role="alert">
-                    {{ session.erro }}
-                </div>
-                {% endif %}
             </form>
             <p class="footer-text">© 2025 Centralizador Acadêmico</p>
         </div>
     </div>
 
-    <!-- Chamada ao ficheiro JavaScript externo -->
     <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 
 </body>

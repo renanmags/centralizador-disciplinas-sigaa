@@ -4,19 +4,17 @@
 import os
 import time
 import json
-import re
-from pathlib import Path
 from bs4 import BeautifulSoup
-from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 
+# Importa a função do novo arquivo de setup
+from .driver_setup import setup_driver
 # Importa as funções auxiliares do nosso próprio pacote
 from .utils import formatar_horario, formatar_professores
+
 
 def extrair_atividades(driver):
     """Extrai atividades pendentes do portal do discente com extração robusta."""
@@ -61,39 +59,29 @@ def extrair_atividades(driver):
         print(f"   -> Nenhuma atividade encontrada ou erro ao extrair: {str(e)}")
         return []
 
-def get_sigaa_disciplinas(username, password):
+
+def get_sigaa_disciplinas(username, password, browser="auto"):
     """
-    Função que usa Selenium para fazer login no SIGAA e extrair os dados
-    detalhados das disciplinas e atividades.
+    Função que usa Selenium para fazer login no SIGAA e extrair dados.
+    Aceita um argumento 'browser' para escolher entre 'chrome', 'firefox', 'edge', 'brave'.
     """
     start_time = time.monotonic()
     
     print(f"--- Iniciando scraper para o usuário: {username} ---")
     
-    options = Options()
-    options.binary_location = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
-    options.add_argument("--headless")
-    options.add_argument("--blink-settings=imagesEnabled=false")
-    options.add_argument("--window-size=1920,1080")
-    options.add_argument("--log-level=3")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    
-    service = Service()
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = setup_driver(browser)
     
     dados_retorno = {
         "nome_aluno": None, "nome_curso": None,
         "disciplinas": [], "atividades": []
     }
-
     debug_dir = "debug"
     os.makedirs(debug_dir, exist_ok=True)
     
     try:
         print("   -> Acessando página de login...")
         driver.get('https://si3.ufc.br/sigaa/verTelaLogin.do')
-        wait = WebDriverWait(driver, 8)
+        wait = WebDriverWait(driver, 5)
         
         campo_usuario = wait.until(EC.presence_of_element_located((By.NAME, "user.login")))
         campo_usuario.send_keys(username)
@@ -102,14 +90,14 @@ def get_sigaa_disciplinas(username, password):
         campo_senha.submit()
         
         try:
-            WebDriverWait(driver, 2).until(
+            WebDriverWait(driver, 1).until(
                 EC.any_of(
                     EC.presence_of_element_located((By.CSS_SELECTOR, "input[value='Continuar >>']")),
                     EC.presence_of_element_located((By.LINK_TEXT, "Portal do Discente"))
                 )
             )
         except:
-            raise Exception("Página pós-login não reconhecida ou login inválido.")
+            raise Exception("Página pós-login não reconhecida ou login inválido (timeout).")
         
         if "Avaliação Institucional" in driver.page_source:
             driver.find_element(By.CSS_SELECTOR, "input[value='Continuar >>']").click()
@@ -192,7 +180,8 @@ def get_sigaa_disciplinas(username, password):
         except Exception as e:
             print(f"   -> ERRO ao salvar o arquivo JSON: {e}")
         
-        driver.quit()
+        if 'driver' in locals() and driver:
+            driver.quit()
 
         end_time = time.monotonic()
         duration = end_time - start_time
