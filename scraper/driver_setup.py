@@ -1,11 +1,8 @@
 # scraper/driver_setup.py
 
 import os
-import platform  # Importa a biblioteca para detectar o sistema operacional
+import platform
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.firefox.service import Service as FirefoxService
-from selenium.webdriver.edge.service import Service as EdgeService
 
 def setup_driver(browser_name="auto"):
     """
@@ -21,7 +18,6 @@ def setup_driver(browser_name="auto"):
         print("   -> Modo de detecção automática de navegador ativado.")
         
         if system == "Windows":
-            # Lógica de detecção para o ambiente local (Windows)
             preference_order = ["chrome", "brave", "firefox", "edge"]
             WINDOWS_BROWSER_PATHS = {
                 "chrome": [r"C:\Program Files\Google\Chrome\Application\chrome.exe", r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"],
@@ -46,13 +42,10 @@ def setup_driver(browser_name="auto"):
             browser_name = detected_browser
 
         elif system == "Linux":
-            # Em produção (Render/Linux), nosso script build.sh instala o Chrome.
-            # Podemos assumir que ele existe.
             print("   -> Ambiente Linux (produção) detectado. Usando Chrome.")
             browser_name = "chrome"
         
         else:
-            # Para outros sistemas como macOS, podemos adicionar a lógica depois. Por enquanto, usa Chrome.
             print(f"   -> Sistema operacional '{system}' não configurado para detecção. Usando Chrome por padrão.")
             browser_name = "chrome"
 
@@ -74,12 +67,13 @@ def setup_driver(browser_name="auto"):
         options.add_argument("--blink-settings=imagesEnabled=false")
         options.add_argument("--window-size=1920,1080")
         
-        # Opções cruciais para rodar em servidores Linux (e não fazem mal no Windows)
+        # (LINHA ADICIONADA) Adiciona um User-Agent para parecer um navegador comum do Windows
+        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
+        
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         
         if system == "Windows" and browser_name == "brave":
-            # Aponta para o executável do Brave apenas se estiver no Windows
             options.binary_location = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
 
         driver = webdriver.Chrome(options=options)

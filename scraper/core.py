@@ -1,3 +1,5 @@
+# scraper/core.py
+
 # Imports de bibliotecas externas
 import os
 import time
@@ -79,7 +81,8 @@ def get_sigaa_disciplinas(username, password, browser="auto"):
     try:
         print("   -> Acessando página de login...")
         driver.get('https://si3.ufc.br/sigaa/verTelaLogin.do')
-        wait = WebDriverWait(driver, 5)
+        # (ALTERADO) Aumentado o wait principal para 25 segundos
+        wait = WebDriverWait(driver, 25)
         
         campo_usuario = wait.until(EC.presence_of_element_located((By.NAME, "user.login")))
         campo_usuario.send_keys(username)
@@ -88,14 +91,15 @@ def get_sigaa_disciplinas(username, password, browser="auto"):
         campo_senha.submit()
         
         try:
-            WebDriverWait(driver, 1).until(
+            # (ALTERADO) Aumentado o wait pós-login para 25 segundos
+            WebDriverWait(driver, 25).until(
                 EC.any_of(
                     EC.presence_of_element_located((By.CSS_SELECTOR, "input[value='Continuar >>']")),
                     EC.presence_of_element_located((By.LINK_TEXT, "Portal do Discente"))
                 )
             )
-        except:
-            raise Exception("Página pós-login não reconhecida ou login inválido (timeout).")
+        except Exception as e:
+            raise Exception(f"Página pós-login não reconhecida ou login inválido (timeout de 25s). Erro: {e}")
         
         if "Avaliação Institucional" in driver.page_source:
             driver.find_element(By.CSS_SELECTOR, "input[value='Continuar >>']").click()
@@ -162,6 +166,15 @@ def get_sigaa_disciplinas(username, password, browser="auto"):
 
     except Exception as e:
         print(f"   -> ERRO no scraper: {e}")
+        try:
+            html_do_erro = driver.page_source
+            caminho_erro_html = os.path.join(debug_dir, "pagina_de_erro.html")
+            with open(caminho_erro_html, "w", encoding="utf-8") as f:
+                f.write(html_do_erro)
+            print(f"   -> HTML da página de erro salvo em: {caminho_erro_html}")
+        except Exception as save_e:
+            print(f"   -> Falha ao salvar o HTML da página de erro: {save_e}")
+            
         screenshot_path = os.path.join(debug_dir, 'screenshot_erro.png')
         driver.save_screenshot(screenshot_path)
         print(f"   -> Screenshot do erro salvo em: {screenshot_path}")
