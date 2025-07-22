@@ -2,34 +2,22 @@
 # exit on error
 set -o errexit
 
-echo "Iniciando o script de build..."
+echo "Iniciando o script de build final..."
 
 # Instala as dependências do Python
 pip install -r requirements.txt
 
-# --- LÓGICA DE INSTALAÇÃO DO CHROME ATUALIZADA ---
-# Remove avisos do apt
-export DEBIAN_FRONTEND=noninteractive
+# Instala o Google Chrome de forma manual, sem precisar de 'sudo' ou 'apt'
+echo "Baixando e extraindo o Google Chrome..."
+wget -P /tmp https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+dpkg -x /tmp/google-chrome-stable_current_amd64.deb /tmp/chrome
+rm /tmp/google-chrome-stable_current_amd64.deb
 
-echo "Atualizando lista de pacotes e instalando dependências base..."
-# Usamos 'sudo' aqui, que é permitido pela Render para o apt-get
-sudo apt-get update
-# Instala pacotes necessários para baixar e adicionar chaves de repositório
-sudo apt-get install -y wget gnupg
+# Move os arquivos do Chrome para uma pasta no projeto
+# O Selenium Manager irá encontrar o executável do Chrome aqui.
+mv /tmp/chrome/opt/google/chrome /opt/render/project/src/chrome
 
-echo "Baixando e adicionando a chave do Google Chrome..."
-# Baixa a chave para uma pasta temporária onde temos permissão de escrita
-wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg
-
-echo "Configurando o repositório do Google Chrome..."
-# Adiciona o repositório do Chrome à lista de fontes do sistema
-sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list'
-
-echo "Atualizando a lista de pacotes novamente..."
-sudo apt-get update
-
-# Instala o Chrome e suas dependências essenciais
-echo "Instalando o Google Chrome..."
-sudo apt-get install -y google-chrome-stable
+# Adiciona a pasta do Chrome ao PATH do sistema para que o Selenium o encontre
+export PATH="${PATH}:/opt/render/project/src/chrome"
 
 echo "Build concluído com sucesso."
